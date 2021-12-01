@@ -23,9 +23,9 @@ g = 9.81;               % m/s^2
 %% Variable Parameters
 b = 10:2:40;
 c = 2:2:10;
-cam = 1:4;
+cam = 0:6;
 camLoc = 2:4;
-tmax = 3:12; % must be <= 12
+tmax = 1:12; % must be <= 12
 AoA = 0:2:12;
 
 %% Preliminary Calculations
@@ -38,7 +38,7 @@ Re = (rho_air * Va * c)/mu_air; % vector of Re for each chord length
 Mach = Va/sqrt(T_sea*1.4*287); % do we need temperature of air for this?
 
 %% Set up table to store XFOIL data
-vecSize = length(b) * length(c) * length(cam) * length(camLoc) * length(tmax) * length(AoA);
+vecSize = length(b) * length(c) * length(cam) * length(camLoc) * length(tmax) * length(alpha);
 
 span = NaN(vecSize, 1);
 chord = NaN(vecSize, 1);

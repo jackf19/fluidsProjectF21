@@ -1,0 +1,28 @@
+naca 2412
+ppar
+n
+160
+
+
+oper
+iter
+100
+
+
+
+
+oper
+re 1e+06
+mach 0.2
+visc
+pacc
+
+
+alfa 5
+dump xfoil_a05.000_dump.dat
+cpwr xfoil_a05.000_cpwr.dat
+pwrt
+xfoil_pwrt.dat
+plis
+
+quit
