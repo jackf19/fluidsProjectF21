@@ -1,4 +1,4 @@
-function [pol,foil] = xfoil(coord,alpha,Re,Mach,varargin)
+function [pol,foil,converged] = xfoil(coord,alpha,Re,Mach,varargin)
 % Run XFoil and return the results.
 % [polar,foil] = xfoil(coord,alpha,Re,Mach,{extra commands})
 %
@@ -73,10 +73,10 @@ function [pol,foil] = xfoil(coord,alpha,Re,Mach,varargin)
 %
 
 % Some default values
-if ~exist('coord','var'), coord = 'NACA0012'; end;
-if ~exist('alpha','var'), alpha = 0;    end;
-if ~exist('Re','var'),    Re = 1e6;      end;
-if ~exist('Mach','var'),  Mach = 0.2;    end;
+if ~exist('coord','var'), coord = 'NACA0012'; end
+if ~exist('alpha','var'), alpha = 0;    end
+if ~exist('Re','var'),    Re = 1e6;      end
+if ~exist('Mach','var'),  Mach = 0.2;    end
 Nalpha = length(alpha); % Number of alphas swept
 % default foil name
 foil_name = mfilename; 
@@ -87,46 +87,46 @@ fname = mfilename;
 file_coord= [foil_name '.foil'];
 
 % Save coordinates
-if ischar(coord),  % Either a NACA string or a filename
-  if isempty(regexpi(coord,'^NACA *[0-9]{4,5}$')) % Check if a NACA string
+if ischar(coord)  % Either a NACA string or a filename
+  if isempty(regexpi(coord,'^NACA *[0-9]{4,5}$','ONCE')) % Check if a NACA string
 %     foil_name = coord; % some redundant code removed to go green ( ~isempty if uncommented)
 %   else             % Filename supplied
     % set coord file
     file_coord = coord;
-  end;  
+  end
 else
   % Write foil ordinate file
-  if exist(file_coord,'file'),  delete(file_coord); end;
+  if exist(file_coord,'file'),  delete(file_coord); end
   fid = fopen(file_coord,'w');
-  if (fid<=0),
+  if (fid<=0)
     error([mfilename ':io'],'Unable to create file %s',file_coord);
   else
     fprintf(fid,'%s\n',foil_name);
     fprintf(fid,'%9.5f   %9.5f\n',coord');
     fclose(fid);
-  end;
-end;
+  end
+end
 
 % Write xfoil command file
 fid = fopen([wd filesep fname '.inp'],'w');
-if (fid<=0),
+if (fid<=0)
   error([mfilename ':io'],'Unable to create xfoil.inp file');
 else
-  if ischar(coord),
-    if ~isempty(regexpi(coord,'^NACA *[0-9]{4,5}$')),  % NACA string supplied
+  if ischar(coord)
+    if ~isempty(regexpi(coord,'^NACA *[0-9]{4,5}$','ONCE'))  % NACA string supplied
       fprintf(fid,'naca %s\n',coord(5:end));
     else  % filename supplied
       fprintf(fid,'load %s\n',file_coord);
-    end;  
+    end
   else % Coordinates supplied, use the default filename
     fprintf(fid,'load %s\n',file_coord);
-  end;
+  end
   % Extra Xfoil commands
-  for ii = 1:length(varargin),
+  for ii = 1:length(varargin)
     txt = varargin{ii};
     txt = regexprep(txt,'[ \\\/]+','\n');
     fprintf(fid,'%s\n\n\n',txt);
-  end;
+  end
   fprintf(fid,'\n\noper\n');
   % set Reynolds and Mach
   fprintf(fid,'re %g\n',Re);
@@ -135,7 +135,7 @@ else
   % Switch to viscous mode
   if (Re>0)
     fprintf(fid,'visc\n');  
-  end;
+  end
 
   % Polar accumulation 
   fprintf(fid,'pacc\n\n\n');
@@ -150,7 +150,7 @@ else
     fprintf(fid,'alfa %g\n',alpha(ii));
     fprintf(fid,'dump %s\n',file_dump{ii});
     fprintf(fid,'cpwr %s\n',file_cpwr{ii});
-  end;
+  end
   % Polar output filename
   file_pwrt = sprintf('%s_pwrt.dat',fname);
   fprintf(fid,'pwrt\n%s\n',file_pwrt);
@@ -161,10 +161,10 @@ else
   % execute xfoil
   cmd = sprintf('cd %s && xfoil.exe < xfoil.inp > xfoil.out',wd);
   [status,result] = system(cmd);
-  if (status~=0),
+  if (status~=0)
     disp(result);
     error([mfilename ':system'],'Xfoil execution failed! %s',cmd);
-  end;
+  end
 
   % Read dump file
   %    #    s        x        y     Ue/Vinf    Dstar     Theta      Cf       H
@@ -180,7 +180,7 @@ if only >1 % Only do the foil calculations if more than one left hand operator i
     jj = jj + 1;
 
     fid = fopen([wd filesep file_dump{ii}],'r');
-    if (fid<=0),
+    if (fid<=0)
       error([mfilename ':io'],'Unable to read xfoil output file %s',file_dump{ii});
     else
       D = textscan(fid,'%f%f%f%f%f%f%f%f','Delimiter',' ','MultipleDelimsAsOne',true,'CollectOutput',1,'HeaderLines',1);
@@ -194,10 +194,10 @@ if only >1 % Only do the foil calculations if more than one left hand operator i
       end
       
       % store data
-      if ((jj>1) && (size(D{1},1)~=length(foil(ind).x)) && sum(abs(foil(ind).x(:,1)-size(D{1},1)))>1e-6 ),
+      if ((jj>1) && (size(D{1},1)~=length(foil(ind).x)) && sum(abs(foil(ind).x(:,1)-size(D{1},1)))>1e-6 )
         ind = ind + 1;
         jj = 1;
-      end;
+      end
       foil.s(:,jj) = D{1}(:,1);
       foil.x(:,jj) = D{1}(:,2);
       foil.y(:,jj) = D{1}(:,3);
@@ -206,18 +206,18 @@ if only >1 % Only do the foil calculations if more than one left hand operator i
       foil.Theta(:,jj) = D{1}(:,6);
       foil.Cf(:,jj) = D{1}(:,7);
       foil.H (:,jj)= D{1}(:,8);
-    end;
+    end
 
     foil.alpha(1,jj) = alpha(jj);
 
     % Read cp file
     fid = fopen([wd filesep file_cpwr{ii}],'r');
-    if (fid<=0),
+    if (fid<=0)
       error([mfilename ':io'],'Unable to read xfoil output file %s',file_cpwr{ii});
     else
-      C = textscan(fid, '%10f%9f%f', 'Delimiter', '', 'WhiteSpace', '', 'HeaderLines' ,3, 'ReturnOnError', false);
+      C = textscan(fid, '%10f%9s%f', 'Delimiter', '', 'WhiteSpace', '', 'HeaderLines' ,3, 'ReturnOnError', false);
       fclose(fid);
-      delete([wd filesep file_cpwr{ii}]);
+      % delete([wd filesep file_cpwr{ii}]);
       % store data
       if ii == 1 % Use first run to determine number of panels (so that NACA airfoils work without vector input)
          NCp = length(C{1}); % Number of points Cp is listed for pulled from the first angle tested
@@ -226,8 +226,8 @@ if only >1 % Only do the foil calculations if more than one left hand operator i
          foil.xcp = C{1}(:,1);
       end      
       foil.cp(:,jj) = C{3}(:,1);
-    end;
-  end;
+    end
+  end
 end
 
 if only <= 1% clear files for default run
@@ -251,7 +251,7 @@ end
   %   alpha    CL        CD       CDp       CM     Top_Xtr  Bot_Xtr
   %  ------ -------- --------- --------- -------- -------- --------
   fid = fopen([wd filesep file_pwrt],'r');
-  if (fid<=0),
+  if (fid<=0)
     error([mfilename ':io'],'Unable to read xfoil polar file %s',file_pwrt);
   else
     % Header
@@ -280,8 +280,11 @@ end
     pol.Top_xtr = P{6}(:,1);
     pol.Bot_xtr = P{7}(:,1);
   end
+
+  converged = true;
   if length(pol.alpha) ~= Nalpha % Check if xfoil failed to converge 
 %     warning('One or more alpha values failed to converge. Last converged was alpha = %f. Rerun with ''oper iter ##'' command.\n', pol.alpha(end)) 
+    converged = false;
   end
   
 end

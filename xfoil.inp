@@ -1,4 +1,4 @@
-naca 2412
+naca 4406
 ppar
 n
 160
@@ -12,15 +12,15 @@ iter
 
 
 oper
-re 1e+06
-mach 0.2
+re 1.69048e+07
+mach 0
 visc
 pacc
 
 
-alfa 5
-dump xfoil_a05.000_dump.dat
-cpwr xfoil_a05.000_cpwr.dat
+alfa 6
+dump xfoil_a06.000_dump.dat
+cpwr xfoil_a06.000_cpwr.dat
 pwrt
 xfoil_pwrt.dat
 plis
